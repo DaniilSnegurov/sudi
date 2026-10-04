@@ -1,0 +1,53 @@
+# Запуск целиком: docker compose up --build
+# Интерфейс: http://localhost:8765. Нужна видеокарта NVIDIA с 12 ГБ памяти и NVIDIA Container Toolkit.
+services:
+  ollama:
+    image: ollama/ollama:0.35.1
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: 30m
+      OLLAMA_NUM_PARALLEL: "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Однократно скачивает модель (6,6 ГБ) в том ollama и завершается
+  model:
+    image: ollama/ollama:0.35.1
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "${COURTDOCS_LLM_MODEL:-qwen3.5:9b}"]
+    restart: "no"
+
+  app:
+    build: .
+    depends_on:
+      model:
+        condition: service_completed_successfully
+    environment:
+      COURTDOCS_LLM_URL: http://ollama:11434
+      COURTDOCS_LLM_MODEL: ${COURTDOCS_LLM_MODEL:-qwen3.5:9b}
+      COURTDOCS_VLM_MODEL: ${COURTDOCS_LLM_MODEL:-qwen3.5:9b}
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - data:/data
+      # папка с документами для пакетной обработки и кнопки «Учебный набор»
+      - ${COURTDOCS_INPUT:-./courts_anonymized}:/app/courts_anonymized:ro
+
+volumes:
+  ollama:
+  data:

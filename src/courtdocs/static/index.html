@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Судебные документы</title>
+<style>
+:root { --bg:#f5f6f8; --card:#fff; --ink:#1c2330; --muted:#6b7482; --line:#e1e5eb; --accent:#2457d6; --accent-soft:#e8eefc;
+        --ok:#1f8a4c; --ok-soft:#e4f5ea; --warn:#b26a00; --warn-soft:#fff3d9; --bad:#c0362c; --bad-soft:#fde8e6; --info:#3a6ea5; --info-soft:#e6f0fa; }
+* { box-sizing:border-box; }
+body { margin:0; font:14px/1.45 system-ui, "Segoe UI", Roboto, Arial, sans-serif; color:var(--ink); background:var(--bg); }
+header { display:flex; align-items:center; gap:12px; padding:10px 20px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; flex-wrap:wrap; }
+header h1 { font-size:16px; margin:0 8px 0 0; }
+.dot { width:9px; height:9px; border-radius:50%; background:#bbb; display:inline-block; margin-right:6px; }
+.dot.on { background:var(--ok); } .dot.off { background:var(--bad); }
+.muted { color:var(--muted); } .small { font-size:12px; }
+button, .btn { font:inherit; padding:7px 12px; border:1px solid var(--line); border-radius:7px; background:var(--card); color:var(--ink); cursor:pointer; text-decoration:none; }
+button:hover, .btn:hover { border-color:#b9c2d0; }
+button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+button:disabled { opacity:.5; cursor:default; }
+nav { display:flex; gap:4px; padding:0 20px; background:var(--card); border-bottom:1px solid var(--line); overflow-x:auto; }
+nav a { padding:10px 14px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; }
+nav a.active { color:var(--accent); border-color:var(--accent); font-weight:600; }
+main { padding:16px 20px 40px; max-width:1500px; margin:0 auto; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; }
+.toolbar { display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+.chip { padding:4px 10px; border-radius:999px; border:1px solid var(--line); background:var(--card); cursor:pointer; font-size:13px; }
+.chip.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.tablewrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th, td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-size:12px; color:var(--muted); font-weight:600; white-space:nowrap; }
+tbody tr.row { cursor:pointer; } tbody tr.row:hover { background:#fafbfd; }
+.badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; white-space:nowrap; }
+.b-processed { background:var(--ok-soft); color:var(--ok); } .b-needs_review { background:var(--warn-soft); color:var(--warn); }
+.b-failed { background:var(--bad-soft); color:var(--bad); } .b-confirmed { background:var(--info-soft); color:var(--info); }
+.b-src { background:#eef0f4; color:#475063; } .b-review { background:var(--warn-soft); color:var(--warn); } .b-info { background:var(--info-soft); color:var(--info); }
+.b-manual { background:var(--accent-soft); color:var(--accent); }
+.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.progress { height:6px; width:180px; background:var(--line); border-radius:4px; overflow:hidden; }
+.progress > div { height:100%; background:var(--accent); width:0; transition:width .3s; }
+.split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; align-items:start; }
+@media (max-width:1000px) { .split { grid-template-columns:1fr; } }
+.pagebox { position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff; }
+.pagebox img { display:block; width:100%; }
+.hl { position:absolute; border:2px solid var(--accent); background:rgba(36,87,214,.14); border-radius:3px; pointer-events:none; }
+.pager { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.field { display:grid; grid-template-columns:150px minmax(0,1fr); gap:4px 10px; padding:8px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+.field:hover { background:#fafbfd; } .field.sel { background:var(--accent-soft); }
+.field label { color:var(--muted); font-size:13px; padding-top:6px; cursor:pointer; overflow-wrap:anywhere; }
+.field input, .field textarea { width:100%; font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+.field input.review, .field textarea.review { border-color:#e2b34d; background:#fffaf0; }
+.field .meta { grid-column:2; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.issue { padding:10px 12px; border-left:3px solid var(--warn); background:var(--warn-soft); border-radius:6px; margin:8px 0; }
+.issue.info { border-color:var(--info); background:var(--info-soft); }
+.issue .code { font-weight:600; font-size:12px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; }
+.stat { padding:14px; } .stat b { font-size:26px; display:block; }
+.bar { height:10px; background:var(--accent); border-radius:4px; min-width:2px; }
+.debt { padding:12px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; }
+.debt mark { background:#ffe58a; padding:1px 0; }
+.drop { border:2px dashed var(--line); border-radius:12px; padding:40px 20px; text-align:center; color:var(--muted); }
+.drop.over { border-color:var(--accent); background:var(--accent-soft); }
+.form { display:grid; grid-template-columns:220px minmax(0,420px); gap:10px 14px; padding:16px; align-items:center; }
+.form input[type=text], .form input[type=number] { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:6px; width:100%; }
+h2 { font-size:15px; margin:18px 0 8px; }
+.linkish { color:var(--accent); cursor:pointer; background:none; border:none; padding:0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Судебные документы</h1>
+  <span class="small muted" id="model"><span class="dot"></span>модель…</span>
+  <span style="flex:1"></span>
+  <span id="job" class="small muted" style="display:none"><span id="jobtext"></span><div class="progress"><div id="jobbar"></div></div></span>
+  <button class="primary" id="btn-upload">Загрузить файлы</button>
+  <button id="btn-sample" title="Обработать папку courts_anonymized">Учебный набор</button>
+  <a class="btn" href="/api/export/judicial.xlsx">Судебные .xlsx</a>
+  <a class="btn" href="/api/export/fssp.xlsx">ФССП .xlsx</a>
+  <a class="btn" href="/api/export/issues.xlsx">Замечания .xlsx</a>
+  <input type="file" id="file" multiple accept=".pdf,.xml,.zip" hidden>
+</header>
+<nav>
+  <a data-view="docs" class="active">Документы</a>
+  <a data-view="issues">Замечания</a>
+  <a data-view="stats">Сводка</a>
+  <a data-view="settings">Настройки</a>
+</nav>
+<main id="main"></main>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api = async (url, opt) => {
+  const r = await fetch(url, opt && opt.body && !(opt.body instanceof FormData)
+    ? {...opt, headers: {"Content-Type": "application/json"}, body: JSON.stringify(opt.body)} : opt);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r.json();
+};
+const STATUS = {processed: "без замечаний", needs_review: "на проверку", failed: "не обработан", confirmed: "проверен"};
+const SOURCE = {llm: "модель по тексту OCR", rules: "правила", "llm+rules": "модель и правила совпали", vlm: "модель по странице",
+  vlm_read: "прочитано по изображению", normalized: "ФИО из документа", parsed: "разбор адреса", direct: "поле XML", lookup: "справочник",
+  computed: "подсчёт", registry: "путь файла", sum_of_components: "сумма составляющих"};
+const srcName = d => !d ? "" : d.endsWith("+vlm") ? (SOURCE[d.slice(0, -4)] || d.slice(0, -4)) + ", подтверждено по изображению" : (SOURCE[d] || d);
+const money = v => v == null || v === "" ? "" : Number(v).toLocaleString("ru-RU", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const state = {view: "docs", filter: "all", profile: "all", docs: [], doc: null, page: 1, sel: null};
+
+/* ---------- навигация ---------- */
+document.querySelectorAll("nav a").forEach(a => a.onclick = () => show(a.dataset.view));
+function show(view, arg) {
+  state.view = view;
+  document.querySelectorAll("nav a").forEach(a => a.classList.toggle("active", a.dataset.view === (view === "doc" ? "docs" : view)));
+  ({docs: viewDocs, doc: () => viewDoc(arg), issues: viewIssues, stats: viewStats, settings: viewSettings})[view]();
+}
+
+/* ---------- список документов ---------- */
+async function viewDocs() {
+  state.docs = await api("/api/documents");
+  const n = s => state.docs.filter(d => s === "all" || d.status === s).length;
+  const rows = state.docs.filter(d => (state.filter === "all" || d.status === state.filter) && (state.profile === "all" || d.profile === state.profile));
+  $("#main").innerHTML = `
+    <div class="toolbar">
+      ${["all", "needs_review", "processed", "confirmed", "failed"].map(s =>
+        `<span class="chip ${state.filter === s ? "active" : ""}" data-f="${s}">${s === "all" ? "Все" : STATUS[s]} · ${n(s)}</span>`).join("")}
+      <span style="flex:1"></span>
+      ${[["all", "Все виды"], ["judicial", "Судебные"], ["fssp", "ФССП"]].map(([p, t]) =>
+        `<span class="chip ${state.profile === p ? "active" : ""}" data-p="${p}">${t}</span>`).join("")}
+    </div>
+    ${state.docs.length ? `<div class="card tablewrap"><table>
+      <thead><tr><th>Статус</th><th>Вид</th><th>Файл</th><th>Должник</th><th>Дело</th><th class="num">Сумма, ₽</th><th>Замечания</th><th class="num">Время</th></tr></thead>
+      <tbody>${rows.map(d => `<tr class="row" data-id="${d.id}">
+        <td><span class="badge b-${d.status}">${STATUS[d.status]}</span></td>
+        <td>${esc(d.kind || (d.profile === "fssp" ? "ФССП" : ""))}</td>
+        <td class="small">${esc(d.path)}</td><td>${esc(d.debtor)}</td><td>${esc(d.case)}</td><td class="num">${money(d.amount)}</td>
+        <td>${d.review ? `<span class="badge b-review">проверить: ${d.review}</span> ` : ""}${d.notes - d.review > 0 ? `<span class="badge b-info">к сведению: ${d.notes - d.review}</span> ` : ""}${d.manual ? `<span class="badge b-manual">правок: ${d.manual}</span>` : ""}</td>
+        <td class="num small muted">${d.seconds != null ? d.seconds.toFixed(1) + " с" : ""}</td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="drop" id="drop">Перетащите сюда PDF, XML или ZIP — или нажмите «Загрузить файлы».<br>Для пробы есть кнопка «Учебный набор».</div>`}`;
+  document.querySelectorAll("[data-f]").forEach(c => c.onclick = () => { state.filter = c.dataset.f; viewDocs(); });
+  document.querySelectorAll("[data-p]").forEach(c => c.onclick = () => { state.profile = c.dataset.p; viewDocs(); });
+  document.querySelectorAll("tr.row").forEach(r => r.onclick = () => show("doc", r.dataset.id));
+}
+
+/* ---------- документ ---------- */
+async function viewDoc(id) {
+  const d = state.doc = await api("/api/documents/" + id);
+  state.sel = null;
+  state.page = 1;
+  const ids = state.docs.map(x => x.id), pos = ids.indexOf(id);
+  $("#main").innerHTML = `
+    <div class="toolbar">
+      <button id="back">← К списку</button>
+      <button id="prev" ${pos <= 0 ? "disabled" : ""}>‹</button><button id="next" ${pos < 0 || pos >= ids.length - 1 ? "disabled" : ""}>›</button>
+      <b>${esc(d.path)}</b> <span class="badge b-${d.status}">${STATUS[d.status]}</span>
+      <span style="flex:1"></span>
+      <button id="confirm" class="${d.confirmed ? "" : "primary"}">${d.confirmed ? "Снять отметку «проверен»" : "Документ проверен"}</button>
+    </div>
+    <div class="split">
+      <div>
+        ${d.pages ? `<div class="pager"><button id="pp">‹</button><span id="pn"></span><button id="pnx">›</button>
+          <span class="small muted">Нажмите на поле справа — его источник подсветится на странице</span></div>
+          <div class="pagebox" id="pagebox"><img id="pageimg" alt="страница документа"></div>` : `<div class="card drop">Изображения страниц нет</div>`}
+        ${d.debt_text ? `<h2>Текст предмета исполнения (IdDebtText)</h2><div class="card debt" id="debt"></div>` : ""}
+      </div>
+      <div>
+        <div class="card" id="fields"></div>
+        <h2>Замечания</h2><div id="docissues"></div>
+        <p class="small muted" id="docmeta"></p>
+      </div>
+    </div>`;
+  $("#back").onclick = () => show("docs");
+  $("#prev").onclick = () => show("doc", ids[pos - 1]);
+  $("#next").onclick = () => show("doc", ids[pos + 1]);
+  $("#confirm").onclick = async () => { await api(`/api/documents/${id}/confirm`, {method: "POST", body: {confirmed: !d.confirmed}}); show("doc", id); };
+  if (d.pages) {
+    $("#pp").onclick = () => setPage(state.page - 1);
+    $("#pnx").onclick = () => setPage(state.page + 1);
+    $("#pageimg").onload = drawBoxes;
+    setPage(1);
+  }
+  renderFields();
+  renderDebt();
+  const rule = {card: "карточка должника в документе", first: "первый должник по порядку", handwritten_mark: "рукописная отметка у должника"}[d.extra.main_debtor_rule];
+  $("#docmeta").textContent = [rule && "Основной должник: " + rule, d.extra.versions && `OCR ${d.extra.versions.ocr.split("/")[1]}, модель ${d.extra.versions.llm}`,
+    d.extra.seconds != null && `обработка ${d.extra.seconds} с`, d.extra.state_fee_per_person && "госпошлина указана «с каждого»"].filter(Boolean).join(" · ");
+  $("#docissues").innerHTML = d.issues.length ? d.issues.map(i => `<div class="issue ${i.severity === "info" ? "info" : ""}">
+      <div class="code">${esc(i.field || "документ")} · ${esc(i.code)}</div><div>${esc(i.message)}</div>
+      ${i.candidates.length ? `<div class="small">Варианты: ${i.candidates.map(esc).join(" · ")}</div>` : ""}
+      <div class="small muted">${esc(i.export_effect)}${i.action ? " → " + esc(i.action) : ""}</div></div>`).join("")
+    : `<p class="muted">Замечаний нет.</p>`;
+}
+function setPage(p) {
+  const d = state.doc;
+  state.page = Math.min(Math.max(p, 1), d.pages);
+  $("#pn").textContent = `стр. ${state.page} из ${d.pages}`;
+  $("#pageimg").src = `/api/documents/${d.id}/page/${state.page}.png`;
+}
+function drawBoxes() {
+  const box = $("#pagebox"), img = $("#pageimg");
+  if (!box) return;
+  box.querySelectorAll(".hl").forEach(e => e.remove());
+  const f = state.doc.fields.find(x => x.column === state.sel);
+  if (!f) return;
+  const k = state.doc.render_dpi / 110, W = img.naturalWidth * k, H = img.naturalHeight * k;
+  f.boxes.filter(b => b.page === state.page).forEach(b => {
+    const e = document.createElement("div");
+    e.className = "hl";
+    e.style.cssText = `left:${b.bbox[0] / W * 100}%;top:${b.bbox[1] / H * 100}%;width:${(b.bbox[2] - b.bbox[0]) / W * 100}%;height:${(b.bbox[3] - b.bbox[1]) / H * 100}%`;
+    box.appendChild(e);
+  });
+}
+function renderDebt() {
+  const el = $("#debt"), d = state.doc;
+  if (!el) return;
+  const f = d.fields.find(x => x.column === state.sel), text = d.debt_text || "";
+  const spans = (f ? f.refs : []).map(r => /#chars=(\d+)-(\d+)/.exec(r)).filter(Boolean).map(m => [+m[1], +m[2]]).sort((a, b) => a[0] - b[0]);
+  let html = "", pos = 0;
+  for (const [a, b] of spans) { html += esc(text.slice(pos, a)) + "<mark>" + esc(text.slice(a, b)) + "</mark>"; pos = b; }
+  el.innerHTML = html + esc(text.slice(pos));
+  const m = $("mark", el);
+  if (m) m.scrollIntoView({block: "nearest"});
+}
+function renderFields() {
+  const d = state.doc;
+  $("#fields").innerHTML = d.fields.filter(f => !["IdDebtText", "Файл", "FileName"].includes(f.column)).map(f => {
+    const review = f.state === "needs_review" && !f.manual;
+    const long = String(f.value ?? "").length > 60;
+    return `<div class="field ${state.sel === f.column ? "sel" : ""}" data-c="${esc(f.column)}">
+      <label>${esc(f.column)}</label>
+      ${long ? `<textarea rows="2" class="${review ? "review" : ""}">${esc(f.value)}</textarea>` : `<input class="${review ? "review" : ""}" value="${esc(f.value)}" placeholder="${review ? "нужно проверить" : "нет в документе"}">`}
+      <div class="meta small">
+        ${f.manual ? `<span class="badge b-manual">исправлено вручную</span><button class="linkish" data-reset>вернуть «${esc(f.auto ?? "пусто")}»</button>`
+          : f.value != null ? `<span class="badge b-src">${esc(srcName(f.derivation))}</span>` : ""}
+        ${review ? `<span class="badge b-review">проверить</span>` : ""}
+        ${f.raw && !f.manual && String(f.raw) !== String(f.value) ? `<span class="muted">в документе: «${esc(String(f.raw).slice(0, 70))}»</span>` : ""}
+      </div></div>`;
+  }).join("");
+  document.querySelectorAll(".field").forEach(el => {
+    const column = el.dataset.c, input = $("input,textarea", el), f = d.fields.find(x => x.column === column);
+    el.onclick = () => {
+      state.sel = column;
+      document.querySelectorAll(".field").forEach(x => x.classList.toggle("sel", x === el));
+      if (f.boxes.length && !f.boxes.some(b => b.page === state.page)) setPage(f.boxes[0].page); else drawBoxes();
+      renderDebt();
+    };
+    const save = async body => { state.doc = await api(`/api/documents/${d.id}/fields`, {method: "PATCH", body}); state.sel = column; renderFields(); };
+    input.onchange = () => { if (input.value !== String(f.value ?? "")) save({column, value: input.value}); };
+    input.onkeydown = e => { if (e.key === "Enter" && input.tagName === "INPUT") input.blur(); };
+    const reset = $("[data-reset]", el);
+    if (reset) reset.onclick = e => { e.stopPropagation(); save({column, reset: true}); };
+  });
+}
+
+/* ---------- замечания ---------- */
+async function viewIssues() {
+  const rows = await api("/api/issues");
+  $("#main").innerHTML = rows.length ? `<div class="card tablewrap"><table>
+    <thead><tr><th>Важность</th><th>Файл</th><th>Поле</th><th>Код</th><th>Причина</th><th>Варианты</th><th>Что сделать</th></tr></thead>
+    <tbody>${rows.map(i => `<tr class="row" data-id="${i.id}">
+      <td><span class="badge ${i.resolved ? "b-confirmed" : i.severity === "review" ? "b-review" : "b-info"}">${i.resolved ? "снято" : i.severity === "review" ? "проверить" : "к сведению"}</span></td>
+      <td class="small">${esc(i.path)}</td><td>${esc(i.field || "")}</td><td class="small">${esc(i.code)}</td><td>${esc(i.message)}</td>
+      <td class="small">${i.candidates.map(esc).join("<br>")}</td><td class="small">${esc(i.action)}</td></tr>`).join("")}</tbody></table></div>`
+    : `<p class="muted">Замечаний нет.</p>`;
+  document.querySelectorAll("tr.row").forEach(r => r.onclick = async () => { state.docs = await api("/api/documents"); show("doc", r.dataset.id); });
+}
+
+/* ---------- сводка ---------- */
+async function viewStats() {
+  const s = await api("/api/stats"), st = s.by_status, max = Math.max(1, ...s.by_code.map(c => c.count));
+  const share = n => s.total ? ` <span class="small muted">${Math.round(n / s.total * 100)}%</span>` : "";
+  $("#main").innerHTML = `
+    <div class="grid">
+      <div class="card stat"><b>${s.total}</b>документов<div class="small muted">судебных ${s.by_profile.judicial || 0}, ФССП ${s.by_profile.fssp || 0}</div></div>
+      <div class="card stat"><b>${st.processed || 0}${share(st.processed || 0)}</b>без замечаний</div>
+      <div class="card stat"><b>${st.needs_review || 0}${share(st.needs_review || 0)}</b>на проверку</div>
+      <div class="card stat"><b>${st.confirmed || 0}</b>проверено сотрудником</div>
+      <div class="card stat"><b>${st.failed || 0}</b>не обработано</div>
+      <div class="card stat"><b>${s.vlm_fixed}</b>значений исправлено по изображению</div>
+      <div class="card stat"><b>${s.manual}</b>ручных правок</div>
+      <div class="card stat"><b>${s.avg_seconds.judicial ?? "—"}</b>секунд на судебный PDF<div class="small muted">XML ФССП: ${s.avg_seconds.fssp ?? "—"} с</div></div>
+    </div>
+    <h2>Замечания по видам</h2>
+    <div class="card tablewrap"><table><tbody>${s.by_code.map(c => `<tr><td style="width:240px">${esc(c.code)}</td>
+      <td style="width:110px"><span class="badge ${c.severity === "review" ? "b-review" : "b-info"}">${c.severity === "review" ? "проверить" : "к сведению"}</span></td>
+      <td class="num" style="width:50px">${c.count}</td><td><div class="bar" style="width:${c.count / max * 100}%"></div></td></tr>`).join("") || `<tr><td class="muted">Пока пусто</td></tr>`}</tbody></table></div>`;
+}
+
+/* ---------- настройки ---------- */
+async function viewSettings() {
+  const s = await api("/api/settings");
+  $("#main").innerHTML = `<div class="card"><div class="form">
+      <label>Сервер моделей</label><input type="text" id="s-url" value="${esc(s.model_url)}">
+      <label>Языковая модель</label><input type="text" id="s-model" value="${esc(s.model)}">
+      <label>Модель со зрением</label><input type="text" id="s-vlm" value="${esc(s.vlm_model)}">
+      <label>Перечитывать проблемные места по изображению</label><input type="checkbox" id="s-use" ${s.use_vlm ? "checked" : ""} style="justify-self:start">
+      <label>Порог уверенности OCR</label><input type="number" id="s-conf" min="0" max="1" step="0.05" value="${s.conf_threshold}">
+      <span></span><div><button class="primary" id="s-save">Сохранить</button>
+        <span class="small ${s.model_available ? "" : "muted"}" style="margin-left:10px"><span class="dot ${s.model_available ? "on" : "off"}"></span>${s.model_available ? "модель доступна" : "модель недоступна — запустите start-models.ps1"}</span></div>
+    </div></div>
+    <p class="small muted">Документы обрабатываются на этой машине: тексты и изображения не уходят за её пределы. Рабочая папка: ${esc(s.workdir)}</p>
+    <button id="s-clear">Очистить список документов</button>`;
+  $("#s-save").onclick = async () => {
+    await api("/api/settings", {method: "PUT", body: {model_url: $("#s-url").value, model: $("#s-model").value, vlm_model: $("#s-vlm").value,
+      use_vlm: $("#s-use").checked, conf_threshold: +$("#s-conf").value}});
+    modelStatus(); viewSettings();
+  };
+  $("#s-clear").onclick = async () => { if (confirm("Убрать все документы из списка? Ручные правки тоже будут удалены.")) { await api("/api/documents", {method: "DELETE"}); show("docs"); } };
+}
+
+/* ---------- загрузка и задания ---------- */
+async function modelStatus() {
+  const s = await api("/api/settings").catch(() => null), el = $("#model");
+  el.innerHTML = s && s.model_available ? `<span class="dot on"></span>${esc(s.model)} — локально` : `<span class="dot off"></span>модель недоступна: будут обработаны только XML`;
+}
+async function track(job) {
+  $("#job").style.display = "flex"; $("#job").style.gap = "8px"; $("#job").style.alignItems = "center";
+  for (;;) {
+    job = await api("/api/jobs/" + job.id);
+    $("#jobtext").textContent = job.state === "running" ? `${job.done} из ${job.total || "…"} · ${job.current.split("/").pop()}` : job.state === "done" ? `готово: ${job.done}` : "ошибка: " + job.error;
+    $("#jobbar").style.width = (job.total ? job.done / job.total * 100 : 5) + "%";
+    if (state.view === "docs") viewDocs();
+    if (job.state !== "running") break;
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  setTimeout(() => $("#job").style.display = "none", 6000);
+}
+async function upload(files) {
+  if (!files.length) return;
+  const body = new FormData();
+  [...files].forEach(f => body.append("files", f));
+  try { show("docs"); track(await api("/api/upload", {method: "POST", body})); } catch (e) { alert(e.message); }
+}
+$("#btn-upload").onclick = () => $("#file").click();
+$("#file").onchange = e => { upload(e.target.files); e.target.value = ""; };
+$("#btn-sample").onclick = async () => { try { show("docs"); track(await api("/api/process-folder", {method: "POST", body: {path: "courts_anonymized"}})); } catch (e) { alert(e.message); } };
+window.addEventListener("dragover", e => { e.preventDefault(); const d = $("#drop"); if (d) d.classList.add("over"); });
+window.addEventListener("dragleave", () => { const d = $("#drop"); if (d) d.classList.remove("over"); });
+window.addEventListener("drop", e => { e.preventDefault(); upload(e.dataTransfer.files); });
+
+modelStatus();
+show("docs");
+</script>
+</body>
+</html>
